@@ -64,6 +64,16 @@ def cross_over(expr1, expr2):
     else:
         return random_sub(expr2, get_random_subtree(expr1))
 
+def tuple_to_expression(expr): # TODO: change into sympy expression (currently has priority issues)
+    if isinstance(expr, tuple):
+        if expr[0] == '+':
+            return '(' + '+'.join([tuple_to_expression(e) for e in expr[1:]]) + ')' #sum(tuple_to_expression(child) for child in expr[1:])
+        elif expr[0] == '*':
+            return '(' + '*'.join([tuple_to_expression(e) for e in expr[1:]]) + ')' #prod(tuple_to_expression(child) for child in expr[1:])
+    else:
+        return expr
 
-# for i in range(100):
-#     print(cross_over(('+', ('*', 'x', 'y'), ('*', 'x', 'z')), ('symb', 't', 'a', 'b')))
+for i in range(100):
+    ex = cross_over(('+', ('*', 'x', 'y'), ('*', 'x', 'z')), ('+', 't', 'a', 'b'))
+    print(ex)
+    print(tuple_to_expression(ex))
