@@ -59,8 +59,3 @@ def tuple_to_expression(expr):
     else:
         return expr
 
-
-# for i in range(100):
-#     ex = cross_over(('+', ('*', 'x', 'y'), ('*', 'x', 'z')), ('+', 't', 'a', 'b'))
-#     print(ex)
-#     print(tuple_to_expression(ex))

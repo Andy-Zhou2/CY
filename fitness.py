@@ -12,7 +12,7 @@ for line in lines:
     points.append([float(num) for num in line.split('\t')])
 
 points = points[:3000]  # could consider choosing more points
-print('number of sampled points:', len(points))
+# print('number of sampled points:', len(points))
 for line in points:
     assert len(line) == 8
     for num in line:
@@ -31,7 +31,7 @@ def generate_random_complex_number(magnitude=10):
 def is_positive_definite(matrix, samples=100):
     """check if a 5x5 matrix is positive definite"""
     for _ in range(samples):
-        z = Matrix([[generate_random_complex_number() for _ in range(2)]]).transpose()
+        z = Matrix([[generate_random_complex_number() for _ in range(5)]]).transpose()
         z_dagger = z.conjugate().transpose()
         result = z_dagger * (matrix * z)
         if simplify(result[0]) <= 0:
@@ -60,7 +60,7 @@ def evaluate_potential(potential, zs, zbs):
         for j in range(5):
             tensor_expressions[i].append(diff(diff(temp_expr, zs[i]), zbs[j]))
 
-   
+    error_total = 0
     start_time = time()
     for point in points:
         z0 = 1
@@ -80,7 +80,36 @@ def evaluate_potential(potential, zs, zbs):
                 concrete_expressions[i].append(err)
 
                 if is_positive_definite(Matrix(tensor_expressions)):
-                    ...
-    print('check time:', time() - start_time)
+                    error_total += abs(concrete_expressions[i][j])
+                else:
+                    print('not positive definite')
+                    return oo
+    print('points substitution time:', time() - start_time)
+    return error_total
+
+
+from generate_test_data import read_test_data
+data_points = read_test_data()
+
+def calculate_test_fitness(expression, zs):
+    error_total = 0
+    for point in data_points:
+        z0 = point[0] + I * point[1]
+        z1 = point[2] + I * point[3]
+        z2 = point[4] + I * point[5]
+        z3 = point[6] + I * point[7]
+        z4 = point[8] + I * point[9]
+        zs_concrete = [z0, z1, z2, z3, z4]
+        y = point[10] + I * point[11]
+
+        pred = expression
+        for i in range(5):
+            pred = pred.subs(zs[i], zs_concrete[i])
+        # print('pred:', pred)
+        error = simplify(abs(pred - y))
+        # print(z0, z1, z2, z3, z4, pred, y, error)
+        error_total += error
+    return error_total
+
 
 m = Matrix([[3, 1], [1, 2]])

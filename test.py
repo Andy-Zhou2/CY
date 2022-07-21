@@ -1,5 +1,6 @@
 from sympy import *
 from random import randint
+import math
 
 m = Matrix([[3, 1], [1, 2]])
 
@@ -25,4 +26,6 @@ def generate_random_complex_number():
 print(Integer(1)/Integer(0))
 print(oo+1)
 
-print(zoo)
+print(oo)
+print(abs(1+I*2))
+print(2161299**2)
