@@ -5,6 +5,11 @@ import math
 from random import choices
 from numpy import argmin
 import time
+import logging
+
+logging.basicConfig(filename='test2.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s',
+                    level=logging.DEBUG)
+logging.warning('start running')
 
 # use genetic programming to find the best solution
 # initialize population
@@ -70,7 +75,7 @@ population.extend(zs)
 population.extend([Integer(i) for i in range(1, 11)])
 population.extend([Integer(-i) for i in range(1, 11)])
 population.extend([('+', zs[i], zs[j]) for i in range(5) for j in range(5)])
-# population.extend([('*', zs[i], zs[j]) for i in range(5) for j in range(5)])
+population.extend([('*', zs[i], zs[j]) for i in range(5) for j in range(5)])
 print(population, len(population))
 
 
@@ -83,25 +88,28 @@ def sub_z(expression):
 
 epoch = 1
 while True:
-    print(f'start epoch {epoch}')
+    logging.info(f'start epoch {epoch}')
     epoch_start_time = time.time()
     fitness_values = []  # used as weights for random selection
     for tuple_expr in population:
         expr = tuple_to_expression(tuple_expr)
         fitness_value = calculate_test_fitness(expr, zs)  # higher fitness value, less fit
+        logging.debug(f'{expr}: {fitness_value}')
         if fitness_value == 0:
-            print('found solution', expr)
+            logging.info(('found solution', expr))
             import sys
 
             sys.exit(0)
         fitness_values.append(fitness_value)
     weights = [1 / (v ** 2) for v in fitness_values]
 
-    print(f'average fitness value: {sum(fitness_values) / len(fitness_values)}')
-    print(f'most fit: {population[argmin(fitness_values)]} {min(fitness_values)}')
+    logging.info(f'average fitness value: {sum(fitness_values) / len(fitness_values)}')
+    logging.info(
+        f'most fit: {population[argmin(fitness_values)]} = {tuple_to_expression(population[argmin(fitness_values)])}:'
+        f'{min(fitness_values)}')
 
-    CROSS_OVER_SIZE = 300
-    REPRODUCTION_SIZE = 300
+    CROSS_OVER_SIZE = 800
+    REPRODUCTION_SIZE = 150
 
     new_population = []
     for i in range(CROSS_OVER_SIZE):
@@ -115,10 +123,10 @@ while True:
 
     new_population_set = set(new_population)
 
-    # print('next gen of population:', {tuple_to_expression(tuple_expr) for tuple_expr in new_population_set})
-    print('population size:', len(new_population_set))
+    logging.info((f'next gen of population:', {tuple_to_expression(tuple_expr) for tuple_expr in new_population_set}))
+    logging.info(('population size:', len(new_population_set)))
 
     population = list(new_population_set)
     epoch += 1
 
-    print(f'epoch time: {time.time() - epoch_start_time}')
+    logging.info(f'epoch time: {time.time() - epoch_start_time}')

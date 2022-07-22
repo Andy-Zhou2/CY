@@ -1,28 +1,31 @@
 import pickle as pickle
+from sympy import *
 
 if __name__ == '__main__':
     from random import random
 
-    NUM_SAMPLES = 1000
+    NUM_SAMPLES = 100
 
     data_points = []
     for _ in range(NUM_SAMPLES):
         point = []
-        # generate random real numbers between -100 and 100
-        # total of 10 numbers generated
-        for _ in range(10):
-            point.append(random() * 200 - 100)
-        sum_real = sum(point[::2])
-        sum_imag = sum(point[1::2])
-        point.append(sum_real)
-        point.append(sum_imag)
+        for _ in range(5):
+            # generate random real numbers between -100 and 100
+            real = random() * 200 - 100
+            imag = random() * 200 - 100
+            point.append(real + imag * I)
+
+        z0, z1, z2, z3, z4 = point
+        expression = simplify(z0 * 2 + z1 * z4 + z2 * 4 + z3 * z4 + z4 * 6)
+        point.append(expression)
         data_points.append(point)
 
-    with open('test_data_points.pkl', 'wb') as f:
+        print(point)
+    with open('test_data_points2.pkl', 'wb') as f:
         pickle.dump(data_points, f)
 
 
 def read_test_data():
-    with open('test_data_points.pkl', 'rb') as f:
+    with open('test_data_points2.pkl', 'rb') as f:
         data_points = pickle.load(f)
-    return data_points[:50]
+    return data_points[:20]

@@ -94,22 +94,23 @@ data_points = read_test_data()
 def calculate_test_fitness(expression, zs):
     error_total = 0
     for point in data_points:
-        z0 = point[0] + I * point[1]
-        z1 = point[2] + I * point[3]
-        z2 = point[4] + I * point[5]
-        z3 = point[6] + I * point[7]
-        z4 = point[8] + I * point[9]
+        z0 = point[0]
+        z1 = point[1]
+        z2 = point[2]
+        z3 = point[3]
+        z4 = point[4]
         zs_concrete = [z0, z1, z2, z3, z4]
-        y = point[10] + I * point[11]
+        y = point[5]
 
         pred = expression
         for i in range(5):
             pred = pred.subs(zs[i], zs_concrete[i])
         # print('pred:', pred)
+        pred = simplify(pred)
         error = simplify(abs(pred - y))
-        # print(z0, z1, z2, z3, z4, pred, y, error)
+        # print(z0, z1, z2, z3, z4, pred, y, error, sep='\n', end='\n\n')
         error_total += error
     return error_total
 
-
-m = Matrix([[3, 1], [1, 2]])
+# z0, z1, z2, z3, z4 = symbols('z0 z1 z2 z3 z4')
+# print(calculate_test_fitness(z0*z1 + z4*(z3*z4 + z3), [z0, z1, z2, z3, z4]))
