@@ -6,6 +6,7 @@ from random import choices
 from numpy import argmin
 import time
 import logging
+import numba
 
 logging.basicConfig(filename='test2.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s',
                     level=logging.DEBUG)
@@ -85,22 +86,24 @@ def sub_z(expression):
         expression = expression.subs(Jbs[i], Jbs_z[i])
     return expression
 
+@numba.jit
+def evaluate_population(population):
+    fitness_values = []  # used as weights for random selection
+    for tuple_expr in population:
+        expr = tuple_to_expression(tuple_expr)
+        fitness_value = calculate_test_fitness(expr, zs)  # higher fitness value, less fit
+        logging.debug((expr, fitness_value))
+        if fitness_value == 0:
+            logging.info(('found solution', expr))
+            return expr
+        fitness_values.append(fitness_value)
+    return fitness_values
 
 epoch = 1
 while True:
     logging.info(f'start epoch {epoch}')
     epoch_start_time = time.time()
-    fitness_values = []  # used as weights for random selection
-    for tuple_expr in population:
-        expr = tuple_to_expression(tuple_expr)
-        fitness_value = calculate_test_fitness(expr, zs)  # higher fitness value, less fit
-        logging.debug(f'{expr}: {fitness_value}')
-        if fitness_value == 0:
-            logging.info(('found solution', expr))
-            import sys
-
-            sys.exit(0)
-        fitness_values.append(fitness_value)
+    fitness_values = evaluate_population(population)  # used as weights for random selection
     weights = [1 / (v ** 2) for v in fitness_values]
 
     logging.info(f'average fitness value: {sum(fitness_values) / len(fitness_values)}')
