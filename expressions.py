@@ -49,13 +49,11 @@ def cross_over(expr1, expr2):
 def tuple_to_expression(expr):
     if isinstance(expr, tuple):
         if expr[0] == '+':
-            # return '(' + '+'.join([tuple_to_expression(e) for e in
-            #                        expr[1:]]) + ')'
             return sum(tuple_to_expression(child) for child in expr[1:])
         elif expr[0] == '*':
-            # return '(' + '*'.join([tuple_to_expression(e) for e in
-            #                        expr[1:]]) + ')'
             return prod(tuple_to_expression(child) for child in expr[1:])
+        elif expr[0] == '-':
+            return tuple_to_expression(expr[1]) - tuple_to_expression(expr[2])
     else:
         return expr
 

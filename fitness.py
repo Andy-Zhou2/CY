@@ -1,6 +1,7 @@
 from sympy import *
 from time import time
 from random import randint
+import logging
 
 points = []
 with open('points_on_quintic.txt', 'r') as data_file:
@@ -47,10 +48,9 @@ def evaluate_potential(potential, zs, zbs):
         for j in range(5):
             g[i].append(diff(diff(potential, zs[i]), zbs[j]))
 
-    print('g:', g)
     g = Matrix(g)
     g_det = g.det()
-    print('det:', g_det)
+    logging.debug(('potential:', potential, 'g:', g, 'det:', g_det))
 
     temp_expr = ln(g_det)
 
@@ -82,9 +82,9 @@ def evaluate_potential(potential, zs, zbs):
                 if is_positive_definite(Matrix(tensor_expressions)):
                     error_total += abs(concrete_expressions[i][j])
                 else:
-                    print('not positive definite')
+                    logging.debug((potential, 'not positive definite'))
                     return oo
-    print('points substitution time:', time() - start_time)
+    logging.debug((potential, 'points substitution time:', time() - start_time))
     return error_total
 
 
