@@ -5,6 +5,8 @@ from random import randint
 import logging
 
 points = []
+# points.append([1., 2., 3., 4., 5., 6., 7., 8.])  # TODO： delete
+points.append([1., 0., 2., 0., 3., 0., 4., 0.])
 with open('points_on_quintic.txt', 'r') as data_file:
     lines = data_file.readlines()
 
@@ -33,7 +35,7 @@ def is_positive_definite(matrix, samples=1000):
         return t.tensor(real_part + imag_part * 1j, dtype=t.cfloat)
 
     for _ in range(samples):
-        z = t.tensor([[generate_random_complex_number_int_component() for _ in range(2)]]).transpose(0, 1)
+        z = t.tensor([[generate_random_complex_number_int_component() for _ in range(5)]]).transpose(0, 1)
         z_dagger = t.transpose(t.conj(z), 0, 1)
         result = t.matmul(z_dagger, t.matmul(matrix, z))[0][0]
         # print('res, z, zd, m:', result, z, z_dagger, matrix, sep='\n', end='\n\n')
@@ -49,7 +51,7 @@ def complex_differentiate(value, wrt):
     if value.grad_fn is None:  # usually happens when we get a 0
         return t.tensor(0.)
 
-    result = grad(value, wrt, allow_unused=True, create_graph=True)[0]
+    result = grad(value, wrt, allow_unused=True, create_graph=True, retain_graph=True)[0]
     if result is None:  # wrt is unused
         return t.tensor(0.)
     else:
@@ -57,12 +59,12 @@ def complex_differentiate(value, wrt):
 
 
 def evaluate_potential(potential):
-    """accepts potential in sympy form"""
-    potential = potential.__repr__()  # convert to string for eval
-    print('potential:', potential)
+    potential = potential.__repr__()
+    logging.debug('potential: %s', potential)
     err_total = 0.
 
     for point in points:
+        logging.debug(('now sub point:', point))
         z0 = t.tensor(1., requires_grad=True)
         z1 = t.tensor(point[0] + 1j * point[1], requires_grad=True)
         z2 = t.tensor(point[2] + 1j * point[3], requires_grad=True)
@@ -77,12 +79,14 @@ def evaluate_potential(potential):
         z4b = z4.conj().detach().requires_grad_(True)
         zbs = [z0b, z1b, z2b, z3b, z4b]
 
+        logging.debug(('zs:', zs, 'zbs:', zbs))
+
         # calculate potential
         p = eval(potential)
         if not isinstance(p, t.Tensor):  # if not a tensor, it's a constant
             return float('inf')
         p = t.log(p)  # log outside potential
-        print('p:', p)
+        logging.debug(('p:', p))
 
         # check if potential is real
         if p.imag.abs().max() > 1e-4:
@@ -90,25 +94,26 @@ def evaluate_potential(potential):
             return float('inf')
 
         # calculate metric g
-        g = []
+        g = t.zeros(5, 5, dtype=t.cfloat)
         for i in range(5):
-            g.append([])
             temp = complex_differentiate(p, zs[i])
             logging.debug(('g_entry i, temp:', i, temp))
             for j in range(5):
                 entry = complex_differentiate(temp, zbs[j])
                 logging.debug(('g_entry', i, j, entry))
-                g[i].append(entry)
-        g = t.tensor(g)
-        print(g)
+                g[i][j] = entry
 
-        # check if g is positive definite
-        if not is_positive_definite(g):
-            logging.debug(('not positive definite. point, g:', point, g))
-            return float('inf')
+        logging.debug(('g:', g))
+
+        # # check if g is positive definite
+        # if not is_positive_definite(g):
+        #     logging.debug(('not positive definite. point, g:', point, g))
+        #     return float('inf')
 
         # calculate R and sum to get err
-        ln_det_g = t.log(t.det(g))
+        det = t.det(g)
+        ln_det_g = t.log(det)
+        logging.debug(('ln_det_g:', ln_det_g, 'det:', det))
 
         for i in range(5):
             temp = complex_differentiate(ln_det_g, zs[i])

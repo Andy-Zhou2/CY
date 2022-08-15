@@ -1,13 +1,14 @@
 from sympy import *
 from expressions import cross_over, tuple_to_expression
-from fitness import evaluate_potential
+from FB_fitness import evaluate_potential
 import math
 from random import choices, randint, choice
 from numpy import argmin
 import time
 import logging
 
-logging.basicConfig(filename='test3.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s',
+
+logging.basicConfig(filename='FB.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s',
                     level=logging.DEBUG)
 logging.warning('start running')
 
@@ -45,6 +46,9 @@ J1b, J2b, J3b, J4b, J5b, J6b = symbols('J1b, J2b, J3b, J4b, J5b, J6b')
 Jbs = [J1b, J2b, J3b, J4b, J5b, J6b]
 
 population = []
+# TODO: delete solution
+population.append(('+', 1, ('*', zs[0], zbs[0]), ('*', zs[1], zbs[1]), ('*', zs[2], zbs[2]), ('*', zs[3], zbs[3]),
+                   ('*', zs[4], zbs[4])))
 population.append(('*', ('*', J4, ('+', ('-', J2, J1b), J3b)), J2b))  # TODO: delete
 
 # singletons
@@ -87,6 +91,7 @@ def sub_z(expression):
         expression = expression.subs(Js[i], Js_z[i])
         expression = expression.subs(Jbs[i], Jbs_z[i])
     return expression
+
 
 # print('gg:', sub_z(tuple_to_expression(('*', ('*', J4, ('+', ('-', J2, J1b), J3b)), J2b))).__repr__())
 def choose_random_formula(population, weights):
