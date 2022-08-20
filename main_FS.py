@@ -59,7 +59,7 @@ population.extend([Integer(i) for i in range(1, 11)])
 population.extend([Integer(-i) for i in range(1, 11)])
 # generate random complex constants
 for i in range(100):
-    num = randint(1, 10) + I * randint(1, 10)
+    num = randint(1, 10) + 1j * randint(1, 10)
     population.append(num)
 
 # forms like z1 * z2

@@ -7,7 +7,7 @@ from numpy import argmin
 import time
 import logging
 
-logging.basicConfig(filename='test3.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s',
+logging.basicConfig(filename='main.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s',
                     level=logging.DEBUG)
 logging.warning('start running')
 
@@ -51,11 +51,11 @@ population.append(('*', ('*', J4, ('+', ('-', J2, J1b), J3b)), J2b))  # TODO: de
 population.extend(Js)
 population.extend(Jbs)
 # integers from 1 to 10 and -1 to -10
-population.extend([Integer(i) for i in range(1, 11)])
-population.extend([Integer(-i) for i in range(1, 11)])
+population.extend([i for i in range(1, 11)])
+population.extend([-i for i in range(1, 11)])
 # generate random complex constants
 for i in range(100):
-    num = randint(1, 10) + I * randint(1, 10)
+    num = randint(1, 10) + 1j * randint(1, 10)
     population.append(num)
 
 # forms like z1 * z2
@@ -104,7 +104,10 @@ while True:
     for tuple_expr in population:
         logging.debug(f'now evaluating: {tuple_expr}')
         expr = tuple_to_expression(tuple_expr)
-        expr = sub_z(expr)
+        try:
+            expr = sub_z(expr)
+        except AttributeError:  # expr is not Sympy object; it is a constant
+            pass
         fitness_value = evaluate_potential(expr)  # higher fitness value, less fit
         logging.debug(f'{expr}: {fitness_value}')
         if abs(fitness_value) <= 1:

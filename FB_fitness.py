@@ -15,7 +15,7 @@ for line in lines:
         line = line[:-1]
     points.append([float(num) for num in line.split('\t')])
 
-points = points[:3000]  # could consider choosing more points
+points = points[:5]  # could consider choosing more points
 # print('number of sampled points:', len(points))
 for line in points:
     assert len(line) == 8
@@ -63,13 +63,16 @@ def evaluate_potential(potential):
     logging.debug('potential: %s', potential)
     err_total = 0.
 
-    for point in points:
+    for point_index in range(len(points)):
+        print('now evaluating point %d' % point_index)
+        point = points[point_index]
         logging.debug(('now sub point:', point))
-        z0 = t.tensor(1., requires_grad=True)
-        z1 = t.tensor(point[0] + 1j * point[1], requires_grad=True)
-        z2 = t.tensor(point[2] + 1j * point[3], requires_grad=True)
-        z3 = t.tensor(point[4] + 1j * point[5], requires_grad=True)
-        z4 = t.tensor(point[6] + 1j * point[7], requires_grad=True)
+        k = 1e-2
+        z0 = t.tensor(k * 1., requires_grad=True)
+        z1 = t.tensor(k * (point[0] + 1j * point[1]), requires_grad=True)
+        z2 = t.tensor(k * (point[2] + 1j * point[3]), requires_grad=True)
+        z3 = t.tensor(k * (point[4] + 1j * point[5]), requires_grad=True)
+        z4 = t.tensor(k * (point[6] + 1j * point[7]), requires_grad=True)
         zs = [z0, z1, z2, z3, z4]
 
         z0b = z0.conj().detach().requires_grad_(True)
