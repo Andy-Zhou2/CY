@@ -13,12 +13,9 @@ for line in lines:
         line = line[:-1]
     points.append([float(num) for num in line.split('\t')])
 
-points = choices(points, k=30)  # could consider choosing more points
-# print('number of sampled points:', len(points))
-for line in points:
-    assert len(line) == 8
-    for num in line:
-        assert isinstance(num, float)
+points = choices(points, k=30)
+
+BAD_EXPR_FITNESS = 999
 
 
 def is_positive_definite(matrix, samples=1000):
@@ -55,9 +52,29 @@ def complex_differentiate(value, wrt):
     else:
         return result
 
+def check_hermitian(matrix):
+    for i in range(5):
+        for j in range(i + 1, 5):
+            if abs(matrix[i][j] - matrix[j][i].conj()) > 1e-4:
+                return False
+    for i in range(5):
+        if abs(matrix[i][i].imag) > 1e-4:
+            return False
+    return True
+
+def correct_hermitian(matrix):
+    """Take average of matrix and its conjugate transpose. Take real part along diagonal."""
+    result = t.zeros(5, 5, dtype=t.cfloat)
+    for i in range(5):
+        for j in range(i + 1, 5):
+            result[i][j] = (matrix[i][j] + matrix[j][i].conj()) / 2
+            result[j][i] = result[i][j].conj()
+    for i in range(5):
+        result[i][i] = matrix[i][i].real
+    return result
+
+
 def evaluate_potential(potential):
-    print(potential, type(potential))
-    potential = potential.__repr__()
     logging.debug('potential: %s', potential)
     err_total = 0.
 
@@ -83,15 +100,14 @@ def evaluate_potential(potential):
 
         # calculate potential
         p = eval(potential)
-        if not isinstance(p, t.Tensor):  # if not a tensor, it's a constant
-            return float('inf')
-        p = t.log(p)  # log outside potential
         logging.debug(('p:', p))
+        if not isinstance(p, t.Tensor):  # if not a tensor, it's a constant
+            return BAD_EXPR_FITNESS
 
         # check if potential is real
         if p.imag.abs().max() > 1e-4:
             logging.debug(('Not real. point, img part, potential:', point, p.imag, p))
-            return float('inf')
+            return BAD_EXPR_FITNESS
 
         # calculate metric g
         g = t.zeros(5, 5, dtype=t.cfloat)
@@ -105,10 +121,18 @@ def evaluate_potential(potential):
 
         logging.debug(('g:', g))
 
+        # check if g is hermitian
+        if not check_hermitian(g):
+            logging.debug(('Not hermitian. point, g:', point, g))
+            return BAD_EXPR_FITNESS
+
+        # make g perfectly Hermitian
+        g = correct_hermitian(g)
+
         # check if g is positive definite
         if not is_positive_definite(g):
             logging.debug(('not positive definite. point, g:', point, g))
-            return float('inf')
+            return BAD_EXPR_FITNESS
 
         # calculate R and sum to get err
         det = t.det(g)
@@ -125,4 +149,5 @@ def evaluate_potential(potential):
 
     logging.debug(('err_total:', err_total))
     err_total = abs(err_total)
+    print('someone survived!', potential, err_total)
     return err_total

@@ -47,13 +47,17 @@ def cross_over(expr1, expr2):
 
 
 def tuple_to_expression(expr):
+    """
+    Accepts either single value or tuple-form. Returns single form. Tuple form is like ('+', 'x', 'y').
+    :returns: combined expression in string, always with brackets around
+    """
     if isinstance(expr, tuple):
-        if expr[0] == '+':
-            return sum(tuple_to_expression(child) for child in expr[1:])
-        elif expr[0] == '*':
-            return prod(tuple_to_expression(child) for child in expr[1:])
-        elif expr[0] == '-':
-            return tuple_to_expression(expr[1]) - tuple_to_expression(expr[2])
+        assert len(expr) > 1
+        result = f'{tuple_to_expression(expr[1])}'
+        for i in range(2, len(expr)):
+            result += f' {expr[0]} {tuple_to_expression(expr[i])}'
+        result = f'({result})'
+        return result
     else:
-        return expr
+        return f'({expr})'
 

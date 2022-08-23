@@ -1,4 +1,3 @@
-from sympy import *
 from expressions import cross_over, tuple_to_expression
 from fitness import evaluate_potential
 import math
@@ -14,38 +13,32 @@ logging.warning('start running')
 # use genetic programming to find the best solution
 # initialize population
 
-zs = symbols('z0 z1 z2 z3 z4')
-zbs = symbols('z0b z1b z2b z3b z4b')
+zs = ('z0', 'z1', 'z2', 'z3', 'z4')
+zbs = ('z0b', 'z1b', 'z2b', 'z3b', 'z4b')
 
-J1_z = prod(zs)
-J2_z = sum([zs[(i - 1) % 5] ** 2 * zs[i] * zs[(i + 1) % 5] ** 2 for i in range(5)]) / 5
-J3_z = sum([zs[(i - 2) % 5] ** 2 * zs[i] * zs[(i + 2) % 5] ** 2 for i in range(5)]) / 5
-J4_z = sum([zs[(i - 1) % 5] * zs[i] ** 3 * zs[(i + 1) % 5] for i in range(5)]) / 5
-J5_z = sum([zs[(i - 2) % 5] * zs[i] ** 3 * zs[(i + 2) % 5] for i in range(5)]) / 5
-J6_z = sum([zs[i] ** 5 for i in range(5)]) / 5
-# J1b = conjugate(prod(zs))
-# J2b = conjugate(sum([zs[(i - 1) % 5] ** 2 * zs[i] * zs[(i + 1) % 5] ** 2 for i in range(5)]) / 5)
-# J3b = conjugate(sum([zs[(i - 2) % 5] ** 2 * zs[i] * zs[(i + 2) % 5] ** 2 for i in range(5)]) / 5)
-# J4b = conjugate(sum([zs[(i - 1) % 5] * zs[i] ** 3 * zs[(i + 1) % 5] for i in range(5)]) / 5)
-# J5b = conjugate(sum([zs[(i - 2) % 5] * zs[i] ** 3 * zs[(i + 2) % 5] for i in range(5)]) / 5)
-# J6b = conjugate(sum([zs[i] ** 5 for i in range(5)]) / 5)
-J1b_z = prod(zbs)
-J2b_z = sum([zbs[(i - 1) % 5] ** 2 * zbs[i] * zbs[(i + 1) % 5] ** 2 for i in range(5)]) / 5
-J3b_z = sum([zbs[(i - 2) % 5] ** 2 * zbs[i] * zbs[(i + 2) % 5] ** 2 for i in range(5)]) / 5
-J4b_z = sum([zbs[(i - 1) % 5] * zbs[i] ** 3 * zbs[(i + 1) % 5] for i in range(5)]) / 5
-J5b_z = sum([zbs[(i - 2) % 5] * zbs[i] ** 3 * zbs[(i + 2) % 5] for i in range(5)]) / 5
-J6b_z = sum([zbs[i] ** 5 for i in range(5)]) / 5
+J1_z = '(z0*z1*z2*z3*z4)'
+J2_z = '(z0**2*z1*z2**2/5 + z0**2*z3**2*z4/5 + z0*z1**2*z4**2/5 + z1**2*z2*z3**2/5 + z2**2*z3*z4**2/5)'
+J3_z = '(z0**2*z1**2*z3/5 + z0**2*z2*z4**2/5 + z0*z2**2*z3**2/5 + z1**2*z2**2*z4/5 + z1*z3**2*z4**2/5)'
+J4_z = '(z0**3*z1*z4/5 + z0*z1**3*z2/5 + z0*z3*z4**3/5 + z1*z2**3*z3/5 + z2*z3**3*z4/5)'
+J5_z = '(z0**3*z2*z3/5 + z0*z1*z3**3/5 + z0*z2**3*z4/5 + z1**3*z3*z4/5 + z1*z2*z4**3/5)'
+J6_z = '(z0**5/5 + z1**5/5 + z2**5/5 + z3**5/5 + z4**5/5)'
+
+J1b_z = '(z0b*z1b*z2b*z3b*z4b)'
+J2b_z = '(z0b**2*z1b*z2b**2/5 + z0b**2*z3b**2*z4b/5 + z0b*z1b**2*z4b**2/5 + z1b**2*z2b*z3b**2/5 + z2b**2*z3b*z4b**2/5)'
+J3b_z = '(z0b**2*z1b**2*z3b/5 + z0b**2*z2b*z4b**2/5 + z0b*z2b**2*z3b**2/5 + z1b**2*z2b**2*z4b/5 + z1b*z3b**2*z4b**2/5)'
+J4b_z = '(z0b**3*z1b*z4b/5 + z0b*z1b**3*z2b/5 + z0b*z3b*z4b**3/5 + z1b*z2b**3*z3b/5 + z2b*z3b**3*z4b/5)'
+J5b_z = '(z0b**3*z2b*z3b/5 + z0b*z1b*z3b**3/5 + z0b*z2b**3*z4b/5 + z1b**3*z3b*z4b/5 + z1b*z2b*z4b**3/5)'
+J6b_z = '(z0b**5/5 + z1b**5/5 + z2b**5/5 + z3b**5/5 + z4b**5/5)'
 
 Js_z = [J1_z, J2_z, J3_z, J4_z, J5_z, J6_z]
 Jbs_z = [J1b_z, J2b_z, J3b_z, J4b_z, J5b_z, J6b_z]
 
-J1, J2, J3, J4, J5, J6 = symbols('J1 J2 J3 J4 J5 J6')
+J1, J2, J3, J4, J5, J6 = 'J1', 'J2', 'J3', 'J4', 'J5', 'J6'
 Js = [J1, J2, J3, J4, J5, J6]
-J1b, J2b, J3b, J4b, J5b, J6b = symbols('J1b, J2b, J3b, J4b, J5b, J6b')
+J1b, J2b, J3b, J4b, J5b, J6b = 'J1b', 'J2b', 'J3b', 'J4b', 'J5b', 'J6b'
 Jbs = [J1b, J2b, J3b, J4b, J5b, J6b]
 
 population = []
-population.append(('*', ('*', J4, ('+', ('-', J2, J1b), J3b)), J2b))  # TODO: delete
 
 # singletons
 population.extend(Js)
@@ -83,9 +76,10 @@ print(population, len(population))
 
 
 def sub_z(expression):
+    for i in range(6):  # must replace zbs first, otherwise 'J1b' will be replaced by '(z0*...*z4)b'
+        expression = expression.replace(Jbs[i], Jbs_z[i])
     for i in range(6):
-        expression = expression.subs(Js[i], Js_z[i])
-        expression = expression.subs(Jbs[i], Jbs_z[i])
+        expression = expression.replace(Js[i], Js_z[i])
     return expression
 
 # print('gg:', sub_z(tuple_to_expression(('*', ('*', J4, ('+', ('-', J2, J1b), J3b)), J2b))).__repr__())
@@ -104,13 +98,10 @@ while True:
     for tuple_expr in population:
         logging.debug(f'now evaluating: {tuple_expr}')
         expr = tuple_to_expression(tuple_expr)
-        try:
-            expr = sub_z(expr)
-        except AttributeError:  # expr is not Sympy object; it is a constant
-            pass
+        expr = sub_z(expr)
         fitness_value = evaluate_potential(expr)  # higher fitness value, less fit
         logging.debug(f'{expr}: {fitness_value}')
-        if abs(fitness_value) <= 1:
+        if abs(fitness_value) <= 1e-4:
             logging.info(('found solution', expr))
             import sys
 

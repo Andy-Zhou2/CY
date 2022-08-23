@@ -14,10 +14,11 @@ for line in lines:
 
 points = points[:3000]  # could consider choosing more points
 # print('number of sampled points:', len(points))
-for line in points:
-    assert len(line) == 8
-    for num in line:
-        assert isinstance(num, float)
+points.insert(0, (0.1, 0, 0.2, 0, 0.3, 0, 0.4, 0))
+# for line in points:
+#     assert len(line) == 8
+#     for num in line:
+#         assert isinstance(num, float)
 
 
 def generate_random_complex_number(magnitude=10):
@@ -88,33 +89,3 @@ def evaluate_potential(potential, zs, zbs):
                     return oo
     logging.debug((potential, 'points substitution time:', time() - start_time))
     return error_total
-
-
-from generate_test_data import read_test_data
-
-data_points = read_test_data()
-
-
-def calculate_test_fitness(expression, zs):
-    error_total = 0
-    for point in data_points:
-        z0 = point[0]
-        z1 = point[1]
-        z2 = point[2]
-        z3 = point[3]
-        z4 = point[4]
-        zs_concrete = [z0, z1, z2, z3, z4]
-        y = point[5]
-
-        pred = expression
-        for i in range(5):
-            pred = pred.subs(zs[i], zs_concrete[i])
-        # print('pred:', pred)
-        pred = simplify(pred)
-        error = simplify(abs(pred - y))
-        # print(z0, z1, z2, z3, z4, pred, y, error, sep='\n', end='\n\n')
-        error_total += error
-    return error_total
-
-# z0, z1, z2, z3, z4 = symbols('z0 z1 z2 z3 z4')
-# print(calculate_test_fitness(z0*z1 + z4*(z3*z4 + z3), [z0, z1, z2, z3, z4]))
