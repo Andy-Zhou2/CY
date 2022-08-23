@@ -39,6 +39,7 @@ J1b, J2b, J3b, J4b, J5b, J6b = 'J1b', 'J2b', 'J3b', 'J4b', 'J5b', 'J6b'
 Jbs = [J1b, J2b, J3b, J4b, J5b, J6b]
 
 population = []
+population.append(('+', 1, ('*', 'z0', 'z0b'), ('*', 'z1', 'z1b'), ('*', 'z2', 'z2b'), ('*', 'z3', 'z3b'), ('*', 'z4', 'z4b')))
 
 # singletons
 population.extend(Js)

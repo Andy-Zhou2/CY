@@ -15,7 +15,7 @@ for line in lines:
 
 points = choices(points, k=30)
 
-BAD_EXPR_FITNESS = 999
+BAD_EXPR_FITNESS = 99
 
 
 def is_positive_definite(matrix, samples=1000):
@@ -27,7 +27,7 @@ def is_positive_definite(matrix, samples=1000):
             imag_part = randint(-magnitude, magnitude + 1)
             if real_part != 0 or imag_part != 0:
                 break
-        return t.tensor(real_part + imag_part * 1j, dtype=t.cfloat)
+        return t.tensor(real_part + imag_part * 1j, dtype=t.complex128)
 
     for _ in range(samples):
         z = t.tensor([[generate_random_complex_number_int_component() for _ in range(5)]]).transpose(0, 1)
@@ -64,7 +64,7 @@ def check_hermitian(matrix):
 
 def correct_hermitian(matrix):
     """Take average of matrix and its conjugate transpose. Take real part along diagonal."""
-    result = t.zeros(5, 5, dtype=t.cfloat)
+    result = t.zeros(5, 5, dtype=t.complex128)
     for i in range(5):
         for j in range(i + 1, 5):
             result[i][j] = (matrix[i][j] + matrix[j][i].conj()) / 2
@@ -81,12 +81,12 @@ def evaluate_potential(potential):
     for point_index in range(len(points)):
         point = points[point_index]
         logging.debug(('now sub point:', point))
-        k = 1e-2
-        z0 = t.tensor(k * 1., requires_grad=True)
-        z1 = t.tensor(k * (point[0] + 1j * point[1]), requires_grad=True)
-        z2 = t.tensor(k * (point[2] + 1j * point[3]), requires_grad=True)
-        z3 = t.tensor(k * (point[4] + 1j * point[5]), requires_grad=True)
-        z4 = t.tensor(k * (point[6] + 1j * point[7]), requires_grad=True)
+        k = 1
+        z0 = t.tensor(k * 1., requires_grad=True, dtype=t.complex128)
+        z1 = t.tensor(k * (point[0] + 1j * point[1]), requires_grad=True, dtype=t.complex128)
+        z2 = t.tensor(k * (point[2] + 1j * point[3]), requires_grad=True, dtype=t.complex128)
+        z3 = t.tensor(k * (point[4] + 1j * point[5]), requires_grad=True, dtype=t.complex128)
+        z4 = t.tensor(k * (point[6] + 1j * point[7]), requires_grad=True, dtype=t.complex128)
         zs = [z0, z1, z2, z3, z4]
 
         z0b = z0.conj().detach().requires_grad_(True)
@@ -104,13 +104,14 @@ def evaluate_potential(potential):
         if not isinstance(p, t.Tensor):  # if not a tensor, it's a constant
             return BAD_EXPR_FITNESS
 
+        p = t.log(p)
         # check if potential is real
         if p.imag.abs().max() > 1e-4:
             logging.debug(('Not real. point, img part, potential:', point, p.imag, p))
             return BAD_EXPR_FITNESS
 
         # calculate metric g
-        g = t.zeros(5, 5, dtype=t.cfloat)
+        g = t.zeros(5, 5, dtype=t.complex128)
         for i in range(5):
             temp = complex_differentiate(p, zs[i])
             logging.debug(('g_entry i, temp:', i, temp))
@@ -127,7 +128,9 @@ def evaluate_potential(potential):
             return BAD_EXPR_FITNESS
 
         # make g perfectly Hermitian
-        g = correct_hermitian(g)
+        # g = correct_hermitian(g)
+
+        logging.debug(('corrected g:', g))
 
         # check if g is positive definite
         if not is_positive_definite(g):
