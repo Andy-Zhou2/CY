@@ -1,7 +1,7 @@
 from expressions import cross_over, tuple_to_expression
 from fitness import evaluate_potential
 import math
-from random import choices, randint, choice
+from random import choices, randint, choice, random
 from numpy import argmin
 import time
 import logging
@@ -39,17 +39,17 @@ J1b, J2b, J3b, J4b, J5b, J6b = 'J1b', 'J2b', 'J3b', 'J4b', 'J5b', 'J6b'
 Jbs = [J1b, J2b, J3b, J4b, J5b, J6b]
 
 population = []
-population.append(('+', 1, ('*', 'z0', 'z0b'), ('*', 'z1', 'z1b'), ('*', 'z2', 'z2b'), ('*', 'z3', 'z3b'), ('*', 'z4', 'z4b')))
 
 # singletons
 population.extend(Js)
 population.extend(Jbs)
 # integers from 1 to 10 and -1 to -10
-population.extend([i for i in range(1, 11)])
-population.extend([-i for i in range(1, 11)])
+# population.extend([i for i in range(1, 11)])
+# population.extend([-i for i in range(1, 11)])
 # generate random complex constants
 for i in range(100):
-    num = randint(1, 10) + 1j * randint(1, 10)
+    # num = randint(1, 10) + 1j * randint(1, 10)
+    num = random() * 20 - 10
     population.append(num)
 
 # forms like z1 * z2
@@ -99,9 +99,10 @@ while True:
     for tuple_expr in population:
         logging.debug(f'now evaluating: {tuple_expr}')
         expr = tuple_to_expression(tuple_expr)
-        expr = sub_z(expr)
-        fitness_value = evaluate_potential(expr)  # higher fitness value, less fit
-        logging.debug(f'{expr}: {fitness_value}')
+        expr_z = sub_z(expr)
+        fitness_value = evaluate_potential(expr_z)  # higher fitness value, less fit
+        logging.debug(f'{expr} = {expr_z}: {fitness_value}')
+        print(f'{expr}: {fitness_value}')
         if abs(fitness_value) <= 1e-4:
             logging.info(('found solution', expr))
             import sys

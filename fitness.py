@@ -15,7 +15,7 @@ for line in lines:
 
 points = choices(points, k=30)
 
-BAD_EXPR_FITNESS = 99
+BAD_EXPR_FITNESS = 30
 
 
 def is_positive_definite(matrix, samples=1000):
@@ -69,8 +69,8 @@ def correct_hermitian(matrix):
         for j in range(i + 1, 5):
             result[i][j] = (matrix[i][j] + matrix[j][i].conj()) / 2
             result[j][i] = result[i][j].conj()
-    for i in range(5):
-        result[i][i] = matrix[i][i].real
+    # for i in range(5):
+    #     result[i][i] = matrix[i][i].real
     return result
 
 
@@ -102,13 +102,14 @@ def evaluate_potential(potential):
         p = eval(potential)
         logging.debug(('p:', p))
         if not isinstance(p, t.Tensor):  # if not a tensor, it's a constant
-            return BAD_EXPR_FITNESS
+            err_total += BAD_EXPR_FITNESS
+            continue
 
-        p = t.log(p)
         # check if potential is real
         if p.imag.abs().max() > 1e-4:
             logging.debug(('Not real. point, img part, potential:', point, p.imag, p))
-            return BAD_EXPR_FITNESS
+            err_total += BAD_EXPR_FITNESS
+            continue
 
         # calculate metric g
         g = t.zeros(5, 5, dtype=t.complex128)
@@ -125,20 +126,29 @@ def evaluate_potential(potential):
         # check if g is hermitian
         if not check_hermitian(g):
             logging.debug(('Not hermitian. point, g:', point, g))
-            return BAD_EXPR_FITNESS
+            err_total += BAD_EXPR_FITNESS
+            continue
 
         # make g perfectly Hermitian
-        # g = correct_hermitian(g)
+        g = correct_hermitian(g)
 
         logging.debug(('corrected g:', g))
 
         # check if g is positive definite
         if not is_positive_definite(g):
-            logging.debug(('not positive definite. point, g:', point, g))
-            return BAD_EXPR_FITNESS
+            logging.debug(('Not positive definite. point, g:', point, g))
+            err_total += BAD_EXPR_FITNESS
+            continue
 
         # calculate R and sum to get err
         det = t.det(g)
+
+        # check if det is nan or inf
+        if t.isinf(det) or t.isnan(det):
+            logging.debug(('det is nan or inf. point, g:', point, g))
+            err_total += BAD_EXPR_FITNESS
+            continue
+
         ln_det_g = t.log(det)
         logging.debug(('ln_det_g:', ln_det_g, 'det:', det))
 
@@ -148,9 +158,9 @@ def evaluate_potential(potential):
             for j in range(5):
                 entry = complex_differentiate(temp, zbs[j])
                 logging.debug(('R entry:', i, j, entry))
-                err_total += entry.detach().item()
+                err_total += t.abs(entry.detach()).item()
 
     logging.debug(('err_total:', err_total))
     err_total = abs(err_total)
-    print('someone survived!', potential, err_total)
+    # print('someone survived!', potential, err_total)
     return err_total
